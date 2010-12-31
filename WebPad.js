@@ -4,6 +4,7 @@ var WebPad = {};
 WebPad.EditorId=0;
 WebPad.Editors=new Array();
 WebPad.CurrEdit= null;
+WebPad.rmap= new Array();
 WebPad.codes= new Array();
 WebPad.codes['a']=0x0627;
 WebPad.codes['b']=0x0628;
@@ -121,6 +122,16 @@ WebPad.codes[String.fromCharCode(0x0621)]='ہمزہ';
 WebPad.codes[String.fromCharCode(0x0670)]='کھڑی زبر';
 WebPad.codes[String.fromCharCode(0x0651)]='تشدید';
 
+WebPad.rmap['زیر']='>';
+WebPad.rmap['زبر']='<'; 
+WebPad.rmap['پیش']='P'; 
+WebPad.rmap['دو زیر']='M';  
+WebPad.rmap['دو زبر']='F'; 
+WebPad.rmap['دو پیش']='L';
+WebPad.rmap['ہمزہ']='U';
+WebPad.rmap['کھڑی زبر']='I';
+WebPad.rmap['تشدید']='E';
+
 var _se = document.getElementsByTagName('script');
 for (var i=0; i<_se.length; i++) {
     if (_se[i].src && (_se[i].src.indexOf("WebPad.js") != -1) )
@@ -135,6 +146,40 @@ WebPad.Diacritics='[]{}~';
 WebPad.VKI_isIE = /*@cc_on!@*/false;
 WebPad.VKI_isIE6 = /*@if(@_jscript_version == 5.6)!@end@*/false;
 WebPad.VKI_isMoz = typeof window.sidebar != "undefined";
+
+WebPad.SCRIPT_ID = "t13ns";
+WebPad.STATUS_ID = "t13n";
+WebPad.initialized = false;
+
+WebPad.lastTimeoutId = null;
+WebPad.showStatus = function(statusId, message, opt_timeToShow) {
+  if(!document.body)return false;
+  var statusLabel = document.getElementById(statusId);
+  if(!statusLabel) {
+    statusLabel = document.createElement("span");
+    statusLabel.id = statusId;
+    document.body.appendChild(statusLabel)
+  }var isIE = navigator.userAgent.indexOf("MSIE") != -1;
+  var position = isIE ? "absolute" : "fixed";
+  statusLabel.style.cssText = "z-index: 99; font-size: 14px; font-weight: bold; " + "padding: 4px 6px 4px 6px; background: #FFF1A8; " + "position: " + position + "; top: 0";
+  statusLabel.innerHTML = message;
+  var docClientWidth = document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body.clientWidth;
+  statusLabel.style.left = (docClientWidth - statusLabel.clientWidth) / 2 + "px";
+  if(WebPad.lastTimeoutId) {
+    window.clearTimeout(WebPad.lastTimeoutId);
+    WebPad.lastTimeoutId = null
+  }if(opt_timeToShow)WebPad.lastTimeoutId = window.setTimeout(function() {
+    WebPad.clearStatus(statusId)
+  }, opt_timeToShow);
+  return true
+};
+WebPad.clearStatus = function(statusId) {
+  var statusElement = document.getElementById(statusId);
+  if(statusElement) {
+    statusElement.parentNode.removeChild(statusElement);
+    return true
+  }else return false
+};
   
 WebPad.addEvent= function(obj, evType, fn){
 	
@@ -304,11 +349,6 @@ WebPad.addEvent(vkHeader, "mousemove", function(e)
     }
 });
 
-WebPad.hint= function(strText)
-{
-    vkHeader.innerHTML=strText;
-}
-
 var vktable = document.createElement('table');
 with(vktable.style)
 {
@@ -329,11 +369,12 @@ for(i=0; i<3; i++)
         td=document.createElement('td');
         td.className= "btnFlat";
         var caption=String.fromCharCode(WebPad.codes[WebPad.VK_Layout[i][j]]);
+        WebPad.rmap[caption]=WebPad.VK_Layout[i][j];
         var captionNode= document.createTextNode(caption);
         if (caption != "undefined")
         {
-            WebPad.addEvent(td, "click", function(){ WebPad.AddText(this.firstChild.nodeValue);});
-            //WebPad.addEvent(td, "mouseover", function(){ WebPad.hint('Keyboard + '+this.VK_Layout[i][j]);});
+            WebPad.addEvent(td, "click", function(){ WebPad.AddText(this.firstChild.nodeValue);});            
+            WebPad.addEvent(td, "mouseover", function(){ headerText.nodeValue='Keyboard : '+WebPad.rmap[this.firstChild.nodeValue];});            
         }
         td.appendChild(captionNode);
         tr.appendChild(td);
@@ -349,7 +390,9 @@ for(j=0; j< WebPad.VK_Layout[3].length; j++ )
     var caption=WebPad.codes[WebPad.VK_Layout[3][j]];
     var captionNode= document.createTextNode(caption);
     if (caption != "undefined")
+    {
         WebPad.addEvent(td, "click", function(){ WebPad.AddText(WebPad.codes[this.firstChild.nodeValue]);});
+    }
     td.appendChild(captionNode);
     tr.appendChild(td);
 }
@@ -688,18 +731,42 @@ WebPad.makeUrduEditorById= function(idx)
 	WebPad.makeUrduEditor(el);
 }
 
+WebPad.hasActiveElementSupport = function() {
+  return typeof document.activeElement != "undefined"
+};
+
+WebPad._i = function() {
+  WebPad.showStatus(WebPad.STATUS_ID, 'Loading Urdu Editor...');  
+  if(!WebPad.hasActiveElementSupport()) {
+    WebPad.showStatus(WebPad.STATUS_ID, "Your browser is not supported. " + "Supported on Chrome 2+/Safari 4+/IE 6+/FF 3+", 5000);
+    return
+  }
+  WebPad.initialized = true;
+  WebPad.showStatus(WebPad.STATUS_ID, 'Urdu Editor Loaded', 5000);  
+  WebPad._e();
+};
 
 WebPad._e = function() {
+    
+    if(!WebPad.hasActiveElementSupport()) {
+        WebPad.showStatus(WebPad.STATUS_ID, "Your browser is not supported. " + "Supported on Chrome 2+/Safari 4+/IE 6+/FF 3+", 5000);
+        return
+    }
+  
     activeElement = window.document.activeElement;
     var editorID=activeElement.getAttribute("UrduEditorId");
     if (editorID) 
     {
         WebPad.makeNormalEditor(activeElement);
+        WebPad.showStatus(WebPad.STATUS_ID, "Urdu Editor is disabled. " + "To disable, click on the bookmarklet again", 3000);
     }
     else
     {
         if ((activeElement.type.toUpperCase() == "TEXT") || (activeElement.tagName.toUpperCase() == "TEXTAREA")) {
             WebPad.makeUrduEditor(activeElement);
+            WebPad.showStatus(WebPad.STATUS_ID, "Urdu Editor is enabled. " + "To disable, click on the bookmarklet again", 3000);
         }
     }
 };
+
+//WebPad._i();
