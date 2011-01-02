@@ -141,14 +141,42 @@ for (var i=0; i<_se.length; i++) {
     }
 }
 
+WebPad.isEditableElement = function(element) {
+  var elementName = element.tagName.toUpperCase();
+  var iframedoc;
+  return elementName == "TEXTAREA" || elementName == "INPUT" && element.type.toUpperCase() == "TEXT" || elementName == "DIV" && element.contentEditable.toUpperCase() == "TRUE" || elementName == "IFRAME" && (iframedoc = element.contentWindow.document) && (iframedoc.designMode.toUpperCase() == "ON" || iframedoc.body.contentEditable.toUpperCase() == "TRUE")
+};
+
+WebPad.getActiveField = function(opt_doc) {
+  var doc = opt_doc || window.document;
+  var activeElement;
+  try {
+    activeElement = doc.activeElement
+  }catch(e) {
+    return null
+  }if(!activeElement)return null;
+  if(WebPad.isEditableElement(activeElement))return activeElement;
+  var iframes = doc.getElementsByTagName("iframe");
+  for(var i = 0;i < iframes.length;i++)try {
+    var iframe = iframes[i];
+    var iframeDocument = iframe.contentWindow.document;
+    if(!iframeDocument)continue;
+    if((iframeDocument.designMode.toUpperCase() == "ON" || iframeDocument.body.contentEditable.toUpperCase() == "TRUE") && iframeDocument.hasFocus())return iframe;
+    var iframeActiveField = WebPad.getActiveField(iframeDocument);
+    if(iframeActiveField)return iframeActiveField
+  }catch(e) {
+  }return null
+};
+
 WebPad.Diacritics='[]{}~';
 
 WebPad.VKI_isIE = /*@cc_on!@*/false;
 WebPad.VKI_isIE6 = /*@if(@_jscript_version == 5.6)!@end@*/false;
 WebPad.VKI_isMoz = typeof window.sidebar != "undefined";
 
-WebPad.SCRIPT_ID = "t13ns";
-WebPad.STATUS_ID = "t13n";
+WebPad.NAME = "webpad";
+WebPad.SCRIPT_ID = "wpsc";
+WebPad.STATUS_ID = "wpst";
 WebPad.initialized = false;
 
 WebPad.lastTimeoutId = null;
@@ -650,7 +678,6 @@ WebPad.setAttributes= function(el)
 	with(el.style)
 	{
 		fontFamily="Tahoma,Nafees Web Naskh";
-		//fontSize="14px";
 		backgroundColor="#CCFFCC";
 		direction="rtl";
 	}
@@ -687,7 +714,7 @@ WebPad.makeNormalEditor= function(el)
 	el.parentNode.removeChild(this.Editors[editorID].vkButton);	
 	el.parentNode.removeChild(this.Editors[editorID].englishButton);
 	el.parentNode.removeChild(this.Editors[editorID].urduButton);
-    var idx=this.Editors.indexOf();
+    //var idx=this.Editors.indexOf();
 	el.setAttribute("UrduEditorId", null);
 }
 
@@ -735,25 +762,27 @@ WebPad.hasActiveElementSupport = function() {
   return typeof document.activeElement != "undefined"
 };
 
-WebPad._i = function() {
-  WebPad.showStatus(WebPad.STATUS_ID, 'Loading Urdu Editor...');  
-  if(!WebPad.hasActiveElementSupport()) {
+WebPad.init = function() { 
+  WebPad.initialized = true;
+  WebPad.showStatus(WebPad.STATUS_ID, 'Urdu Editor Loaded', 5000);
+  window[WebPad.NAME] = WebPad.toggleUrduEditor;  
+   if(!WebPad.hasActiveElementSupport()) {
     WebPad.showStatus(WebPad.STATUS_ID, "Your browser is not supported. " + "Supported on Chrome 2+/Safari 4+/IE 6+/FF 3+", 5000);
     return
   }
-  WebPad.initialized = true;
-  WebPad.showStatus(WebPad.STATUS_ID, 'Urdu Editor Loaded', 5000);  
-  WebPad._e();
+  WebPad.toggleUrduEditor();
 };
 
-WebPad._e = function() {
+WebPad.toggleUrduEditor = function() {
     
     if(!WebPad.hasActiveElementSupport()) {
         WebPad.showStatus(WebPad.STATUS_ID, "Your browser is not supported. " + "Supported on Chrome 2+/Safari 4+/IE 6+/FF 3+", 5000);
         return
     }
-  
-    activeElement = window.document.activeElement;
+    
+    var activeElement = WebPad.getActiveField();
+    if(!activeElement)return;
+
     var editorID=activeElement.getAttribute("UrduEditorId");
     if (editorID) 
     {
@@ -762,11 +791,9 @@ WebPad._e = function() {
     }
     else
     {
-        if ((activeElement.type.toUpperCase() == "TEXT") || (activeElement.tagName.toUpperCase() == "TEXTAREA")) {
-            WebPad.makeUrduEditor(activeElement);
-            WebPad.showStatus(WebPad.STATUS_ID, "Urdu Editor is enabled. " + "To disable, click on the bookmarklet again", 3000);
-        }
+        WebPad.makeUrduEditor(activeElement);
+        WebPad.showStatus(WebPad.STATUS_ID, "Urdu Editor is enabled. " + "To disable, click on the bookmarklet again", 3000);
     }
 };
 
-//WebPad._i();
+WebPad.init();
