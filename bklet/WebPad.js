@@ -65,8 +65,8 @@ WebPad.codes[String.fromCharCode(32)] = 32;
 WebPad.codes[String.fromCharCode(13)] = 13;
 WebPad.codes[':'] = 0x061B;
 WebPad.codes[';'] = 0x061B;
-WebPad.codes[String.fromCharCode(39)] = 0x2018;
-WebPad.codes[String.fromCharCode(34)] = 0x201C;
+//WebPad.codes[String.fromCharCode(39)] = 0x2018;
+//WebPad.codes[String.fromCharCode(34)] = 0x201C;
 WebPad.codes[String.fromCharCode(46)] = 0x06D4;
 WebPad.codes[String.fromCharCode(44)] = 0x060C;
 WebPad.codes['!'] = 0x0021;
@@ -139,13 +139,6 @@ for (var i = 0; i < _se.length; i++) {
         _sp = _se[i].src.substring(0, _x);
     }
 }
-
-/*var urduImage= new Image();
-var engImage= new Image();
-var vkImage= new Image();
-urduImage.src=_sp + '/urdubtn.gif';
-engImage.src=_sp + '/engbtn.gif';
-vkImage.src=_sp + '/keyboard.gif';*/
 
 WebPad.isEditableElement = function(element) {
     var elementName = element.tagName.toUpperCase();
@@ -254,9 +247,90 @@ WebPad.removeEvent = function(obj, evType, fn) {
     }
 }
 
+WebPad.storeCaret=function() 
+{
+	if (WebPad.CurrEdit.createTextRange) 
+		WebPad.CurrEdit.caretPos = document.selection.createRange().duplicate();
+}
+
 WebPad.AddText = function(strText) {
-    DocumentSelection.insertAtCursor(WebPad.CurrEdit, strText);
-    WebPad.CurrEdit.focus();
+    //DocumentSelection.insertAtCursor(WebPad.CurrEdit, strText);
+    //WebPad.CurrEdit.focus();
+	var virtualprint = false;
+    var win = DOM.getWindow(WebPad.CurrEdit);
+	ck= strText.charCodeAt(0);
+	var evt = null;
+	if (isFunction(win.document.createEvent)) 
+	{		
+		try {
+			evt = win.document.createEvent("KeyEvents");
+			if (WebPad.CurrEdit.tagName.toUpperCase()=="IFRAME")
+			{
+				evt.initKeyEvent('keypress', false, true, WebPad.CurrEdit.contentWindow, false, false, false, false, 0, ck);
+				WebPad.CurrEdit.contentWindow.document.dispatchEvent(evt);
+			}
+			else
+			{
+				evt.initKeyEvent('keypress', false, true, WebPad.CurrEdit.contentWindow, false, false, false, false, 0, ck);
+				WebPad.CurrEdit.dispatchEvent(evt);
+			}
+
+			
+			e.preventDefault();
+
+		} catch (ex) {
+			/*
+			*  Safari implements
+			*/
+			try {
+				evt = win.document.createEvent("TextEvent");
+				
+				if (WebPad.CurrEdit.tagName.toUpperCase()=="IFRAME")
+				{
+					evt.initTextEvent( 'textInput', true, true, WebPad.CurrEdit.contentWindow, String.fromCharCode(ck) );
+					WebPad.CurrEdit.contentWindow.document.dispatchEvent(evt);
+				}
+				else
+				{
+					evt.initTextEvent( 'textInput', true, true, null, String.fromCharCode(ck) );
+					WebPad.CurrEdit.dispatchEvent(evt);
+				}
+				
+				e.preventDefault();
+			} catch (ex) {
+				virtualprint = true;
+			}
+		}
+	} 
+	else if (WebPad.CurrEdit.createTextRange && WebPad.CurrEdit.caretPos) 
+	{
+		var caretPos = WebPad.CurrEdit.caretPos;      
+			caretPos.text = caretPos.text.charAt(caretPos.text.length - 1) == ' ' ?
+			strText + ' ' : strText;
+		WebPad.CurrEdit.focus(caretPos);
+	}	
+	else {
+		
+		DocumentSelection.insertAtCursor(WebPad.CurrEdit, strText);
+		WebPad.storeCaret();
+		WebPad.CurrEdit.focus();
+	}
+
+}
+
+function addStyle(strStyle)
+{
+	var s1 = document.createElement('style');
+	s1.setAttribute("type", "text/css");
+	var s1def = document.createTextNode(strStyle);
+	if (s1.styleSheet) {
+		s1.styleSheet.cssText = strStyle;
+	} else {
+		s1.appendChild(s1def);
+	}
+		
+	var hh1 = document.getElementsByTagName('head')[0];
+	hh1.appendChild(s1);
 }
 
 WebPad.VK_Layout = [
@@ -266,40 +340,14 @@ WebPad.VK_Layout = [
     [String.fromCharCode(0x064E), String.fromCharCode(0x0650), String.fromCharCode(0x064F), String.fromCharCode(0x064D), String.fromCharCode(0x064B), String.fromCharCode(0x0628), String.fromCharCode(0x0621), String.fromCharCode(0x0670), String.fromCharCode(0x0651)],
 ];
 
-//var s1 = document.createElement('style');
-var def1 = '.btnFlat{background:#ECECEC; border:1px solid #888; cursor:pointer; cursor:hand; text-align:center; font-family:Tahoma, Nafees Web Naskh}';
-var def2 = '.btnRaised, .btnFlat:hover{background:#D3D3D3; border:1px outset; cursor:pointer; cursor:hand; text-align:center; font-family:Tahoma, Nafees Web Naskh; font-weight:bold}';
-var def3 = '.btnLowered, .btnFlat:active{background:#D3D3D3; border:1px inset; cursor:pointer; cursor:hand; text-align:center; font-family:Tahoma, Nafees Web Naskh}';
-var def4 = '.keyboardHeader{background:#415888;color:#FFF;text-align:center;border:1px outset;border-color:#000;margin:0 0 5px;padding:2px;cursor:move}';
-var def5 = '.keyboardContainer{background:repeat scroll 0 0 #F7F7F7;direction:ltr; border:1px;border-style:solid;padding:5px;z-index:100}';
-var def7 = '.keyboardContainerDragged{background:repeat scroll 0 0 #F7F7F7;direction:ltr; medium dotted #000066;padding:5px;z-index:100;filter:alpha(opacity=40);-moz-opacity:.40;opacity:0.40}';
-var def6 = '.keyboardPanel{background:none repeat scroll 0 0 #EFEFEF;border:1px outset;color:#000;direction:ltr;border-style:solid;padding:4px}';
-/*s1.setAttribute("type", "text/css");
-var s1def = document.createTextNode(def1 + '\r\n' + def2 + '\r\n' + def3 + '\r\n' + def4 + '\r\n' + def5 + '\r\n' + def6 + '\r\n' + def7);
-
-
-if (s1.styleSheet) {
-    s1.styleSheet.cssText = s1def;
-} else {
-    s1.appendChild(document.createTextNode(s1def));
-}
-    
-var hh1 = document.getElementsByTagName('head')[0];
-hh1.appendChild(s1);*/
-
-var s1 = document.createElement('link');
-s1.setAttribute('rel', "stylesheet");
-s1.setAttribute('type', "text/css");
-s1.setAttribute('href', "data:text/css,.btnFlat{background:#ECECEC; border:1px solid #888; cursor:pointer; cursor:hand; text-align:center; font-family:Tahoma, Nafees Web Naskh};\
+var cssdef = ".btnFlat{background:#ECECEC; border:1px solid #888; cursor:pointer; cursor:hand; text-align:center; font-family:Tahoma, Nafees Web Naskh}\
 .btnRaised, .btnFlat:hover{background:#D3D3D3; border:1px outset; cursor:pointer; cursor:hand; text-align:center; font-family:Tahoma, Nafees Web Naskh; font-weight:bold}\
 .btnLowered, .btnFlat:active{background:#D3D3D3; border:1px inset; cursor:pointer; cursor:hand; text-align:center; font-family:Tahoma, Nafees Web Naskh}\
 .keyboardHeader{background:#415888;color:#FFF;text-align:center;border:1px outset;border-color:#000;margin:0 0 5px;padding:2px;cursor:move}\
-.keyboardContainer{background:repeat scroll 0 0 #F7F7F7;direction:ltr; border:1px;border-style:solid;padding:5px;z-index:1000}\
-.keyboardContainerDragged{background:repeat scroll 0 0 #F7F7F7;direction:ltr; medium dotted #000066;padding:5px;z-index:1000;filter:alpha(opacity=40);-moz-opacity:.40;opacity:0.40};\
-.keyboardPanel{background:none repeat scroll 0 0 #EFEFEF;border:1px outset;color:#000;direction:ltr;border-style:solid;padding:4px}");
-
-var hh1 = document.getElementsByTagName('head')[0];
-hh1.appendChild(s1);
+.keyboardContainer{background:repeat scroll 0 0 #F7F7F7;direction:ltr; border:1px;border-style:solid;padding:5px;z-index:100}\
+.keyboardContainerDragged{background:repeat scroll 0 0 #F7F7F7;direction:ltr; medium dotted #000066;padding:5px;z-index:100;filter:alpha(opacity=40);-moz-opacity:.40;opacity:0.40}\
+.keyboardPanel{background:none repeat scroll 0 0 #EFEFEF;border:1px outset;color:#000;direction:ltr;border-style:solid;padding:4px}";
+addStyle(cssdef);
 
 WebPad.VKI_keyboard = document.createElement('div');
 WebPad.VKI_keyboard.id = "keyboardContainer";
@@ -560,51 +608,72 @@ WebPad.ProcessKeypress = function(e) {
         *  - multiple symbols should be inserted
         *  - multibyte unicode symbol should be inserted
         */
-        if (chr.charCodeAt(0) <= 0x7fff) {
-            var ck = WebPad.codes[chr];
-            /*
-            *  trying to create an event, borrowed from YAHOO.util.UserAction
-            */
-            if (isFunction(win.document.createEvent)) {
-                var evt = null;
-                newkey = WebPad.codes[whichChar];
-                if (newkey == charCode)
-                    return true;
-                try {
-                    evt = win.document.createEvent("KeyEvents");
-                    //evt.initKeyEvent('keypress', false, true, e.target.contentWindow, false, false, false, false, 0, ck);
-                    evt.initKeyEvent('keypress', false, true, WebPad.CurrEdit, false, false, false, false, 0, ck);
-                    //evt.VK_bypass = true;
-                    e.preventDefault();
-                    e.target.dispatchEvent(evt);
+       
+		var ck = WebPad.codes[chr];
+		/*
+		*  trying to create an event, borrowed from YAHOO.util.UserAction
+		*/
+		if (ck != undefined)
+		{
+			if(WebPad.VKI_isIE)
+			{
+				e.keyCode= ck;
+			}
+			else if (isFunction(win.document.createEvent)) 
+			{
+				var evt = null;
+				newkey = WebPad.codes[whichChar];
+				if (newkey == charCode)
+					return true;
+				try {
+					evt = win.document.createEvent("KeyEvents");
+					if (WebPad.CurrEdit.tagName.toUpperCase()=="IFRAME")
+					{
+						evt.initKeyEvent('keypress', false, true, WebPad.CurrEdit.contentWindow, false, false, false, false, 0, ck);
+						WebPad.CurrEdit.contentWindow.document.dispatchEvent(evt);
+					}
+					else
+					{
+						evt.initKeyEvent('keypress', false, true, WebPad.CurrEdit.contentWindow, false, false, false, false, 0, ck);
+						WebPad.CurrEdit.dispatchEvent(evt);
+					}
 
+					
+					e.preventDefault();
 
                 } catch (ex) {
                     /*
                     *  Safari implements
                     */
                     try {
-                        evt = win.document.createEvent("KeyboardEvents");
-                        //evt.initKeyEvent('keypress', false, true, e.target.contentWindow, false, false, false, false, ck, 0);
-                        evt.initKeyEvent('keypress', false, true, WebPad.CurrEdit, false, false, false, false, ck, 0);
-                        //evt.VK_bypass = true;
-                        e.preventDefault();
-                        e.target.dispatchEvent(evt);
-                    } catch (ex) {
-                        virtualprint = true;
-                    }
-                }
-            } else {
-                try {
-                    event.keyCode = 10 == ck ? 13 : ck;
-                    ret = true;
-                } catch (ex) {
-                    virtualprint = true;
-                }
-            }
-        } else {
-            virtualprint = true;
-        }
+                        evt = win.document.createEvent("TextEvent");
+                        
+						if (WebPad.CurrEdit.tagName.toUpperCase()=="IFRAME")
+						{
+							evt.initTextEvent( 'textInput', true, true, WebPad.CurrEdit.contentWindow, String.fromCharCode(ck) );
+							WebPad.CurrEdit.contentWindow.document.dispatchEvent(evt);
+						}
+						else
+						{
+							evt.initTextEvent( 'textInput', true, true, null, String.fromCharCode(ck) );
+							WebPad.CurrEdit.dispatchEvent(evt);
+						}
+						
+						e.preventDefault();
+					} catch (ex) {
+						virtualprint = true;
+					}
+				}
+			} else {
+				try {
+					event.keyCode = 10 == ck ? 13 : ck;
+					ret = true;
+				} catch (ex) {
+					virtualprint = true;
+				}
+			}
+		}
+        
 
         if (virtualprint) {
             var charCode = e.keyCode;
@@ -714,16 +783,17 @@ WebPad.setEnglish = function(el) {
 
 WebPad.setAttributes = function(el) {
     if (el.tagName.toUpperCase() == "IFRAME") {
-        var oldBkcolor = el.contentDocument.body.style.backgroundColor;
-        var oldFont = el.contentDocument.body.style.fontFamily;
-        with (el.contentDocument.body.style) {
-            //fontFamily = "Tahoma,Nafees Web Naskh";
-            //backgroundColor = "#CCFFCC";
-            direction = "rtl";
-        }
+		
+		var oDoc = el.contentWindow || el.contentDocument;
+		if (oDoc.document) {
+			oDoc = oDoc.document;
+		}
+		oDoc.body.style.direction = "rtl";
+
+		
         var editorID = this.getID();
         el.setAttribute("UrduEditorId", editorID);
-        this.Editors[editorID] = { UrduMode: 1, Editor: el, OldFont: oldFont, OldBackground: oldBkcolor };
+        this.Editors[editorID] = { UrduMode: 1, Editor: el };
         WebPad.CurrEdit = el; 
         this.addEvent(el.contentWindow.document, "keypress", this.ProcessKeypress);
         this.addEvent(el.contentWindow.document, "keydown", this.ProcessKeydown);
@@ -745,6 +815,12 @@ WebPad.setAttributes = function(el) {
     this.addEvent(el, "keypress", this.ProcessKeypress);
     this.addEvent(el, "keydown", this.ProcessKeydown);
     this.addEvent(el, "focus", this.SetEditor);
+	
+	if(WebPad.VKI_isIE)
+	{
+		this.addEvent(el, "click", this.storeCaret);
+		this.addEvent(el, "keyup", this.storeCaret);
+	}
 }
 
 WebPad.getID = function() {
@@ -760,11 +836,11 @@ WebPad.makeNormalEditor = function(el) {
     var editorID = el.getAttribute("UrduEditorId");
 
     if (el.tagName.toUpperCase() == "IFRAME") {
-        with (el.contentDocument.body.style) {
-            //backgroundColor = this.Editors[editorID].OldBackground;
-            direction = "ltr";
-            //fontFamilty = this.Editors[editorID].OldFont;
-        }
+        var oDoc = el.contentWindow || el.contentDocument;
+		if (oDoc.document) {
+			oDoc = oDoc.document;
+		}
+		oDoc.body.style.direction = "ltr";
 
         this.removeEvent(el.contentWindow, "keypress", this.ProcessKeypress);
         this.removeEvent(el.contentWindow, "keydown", this.ProcessKeydown);
@@ -777,12 +853,28 @@ WebPad.makeNormalEditor = function(el) {
         this.removeEvent(el, "keypress", this.ProcessKeypress);
         this.removeEvent(el, "keydown", this.ProcessKeydown);
         this.removeEvent(el, "focus", this.SetEditor);
+		if(WebPad.VKI_isIE)
+		{
+			this.removeEvent(el, "click", this.storeCaret);
+			this.removeEvent(el, "keyup", this.storeCaret);
+		}
     }
 
-    
-    el.parentNode.removeChild(this.Editors[editorID].vkButton);
-    el.parentNode.removeChild(this.Editors[editorID].englishButton);
-    el.parentNode.removeChild(this.Editors[editorID].urduButton);
+    if (WebPad.VKI_isIE )
+	{
+		if (el.tagName.toUpperCase() != "IFRAME")
+		{
+			el.parentNode.removeChild(this.Editors[editorID].vkButton);
+			el.parentNode.removeChild(this.Editors[editorID].englishButton);
+			el.parentNode.removeChild(this.Editors[editorID].urduButton);
+		}
+	}
+	else
+	{
+		el.parentNode.removeChild(this.Editors[editorID].vkButton);
+		el.parentNode.removeChild(this.Editors[editorID].englishButton);
+		el.parentNode.removeChild(this.Editors[editorID].urduButton);
+	}
     el.setAttribute("UrduEditorId", null);
 }
 
@@ -799,24 +891,52 @@ WebPad.makeUrduEditor = function(el) {
     urduButton.src = _sp + '/urdubtn.gif';
     englishButton.src = _sp + '/engbtn.gif';
     vkButton.src = _sp + '/keyboard.gif';
-	
-    el.parentNode.insertBefore(urduButton, el.nextSibling);
-    el.parentNode.insertBefore(englishButton, urduButton.nextSibling);
-    el.parentNode.insertBefore(vkButton, englishButton.nextSibling);
+	if (WebPad.VKI_isIE)
+	{
+		if (el.tagName.toUpperCase() != "IFRAME")
+		{
+			el.parentNode.insertBefore(urduButton, el.nextSibling);
+			el.parentNode.insertBefore(englishButton, urduButton.nextSibling);
+			el.parentNode.insertBefore(vkButton, englishButton.nextSibling);
 
-    this.Editors[editorID].urduButton = urduButton;
-    this.Editors[editorID].englishButton = englishButton;
-    this.Editors[editorID].vkButton = vkButton;
-    this.addEvent(urduButton, "click", function() {
-        WebPad.setUrdu(el);
-    });
-    this.addEvent(englishButton, "click", function() {
-        WebPad.setEnglish(el);
-    });
-    this.addEvent(vkButton, "click", function() {
-        if (!WebPad.VKI_keyboard.Visible) WebPad.VK_Show(el);
-        else WebPad.VK_Close();
-    });
+			this.Editors[editorID].urduButton = urduButton;
+			this.Editors[editorID].englishButton = englishButton;
+			this.Editors[editorID].vkButton = vkButton;
+			this.addEvent(urduButton, "click", function() {
+				WebPad.setUrdu(el);
+			});
+			this.addEvent(englishButton, "click", function() {
+				WebPad.setEnglish(el);
+			});
+			this.addEvent(vkButton, "click", function() {
+				if (!WebPad.VKI_keyboard.Visible) WebPad.VK_Show(el);
+				else WebPad.VK_Close();
+				});
+		}
+	}
+    else{
+		el.parentNode.insertBefore(urduButton, el.nextSibling);
+		el.parentNode.insertBefore(englishButton, urduButton.nextSibling);
+		el.parentNode.insertBefore(vkButton, englishButton.nextSibling);
+
+		this.Editors[editorID].urduButton = urduButton;
+		this.Editors[editorID].englishButton = englishButton;
+		this.Editors[editorID].vkButton = vkButton;
+		this.addEvent(urduButton, "click", function() {
+			WebPad.setUrdu(el);
+		});
+		this.addEvent(englishButton, "click", function() {
+			WebPad.setEnglish(el);
+		});
+		this.addEvent(vkButton, "click", function() {
+			if (!WebPad.VKI_keyboard.Visible) WebPad.VK_Show(el);
+			else WebPad.VK_Close();
+			});
+	}
+	if (WebPad.VKI_isIE) 
+	{
+		WebPad.storeCaret();
+	}
 }
 
 WebPad.makeUrduEditorById = function(idx) {
@@ -829,7 +949,6 @@ WebPad.hasActiveElementSupport = function() {
 };
 
 WebPad.init = function() {
-	//alert('test');
     WebPad.initialized = true;
     WebPad.showStatus(WebPad.STATUS_ID, 'Urdu Editor Loaded', 5000);
     window[WebPad.NAME] = WebPad.toggleUrduEditor;
