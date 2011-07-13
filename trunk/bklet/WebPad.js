@@ -254,68 +254,8 @@ WebPad.storeCaret=function()
 }
 
 WebPad.AddText = function(strText) {
-    //DocumentSelection.insertAtCursor(WebPad.CurrEdit, strText);
-    //WebPad.CurrEdit.focus();
-	var virtualprint = false;
-    var win = DOM.getWindow(WebPad.CurrEdit);
-	ck= strText.charCodeAt(0);
-	var evt = null;
-	if (isFunction(win.document.createEvent)) 
-	{		
-		try {
-			evt = win.document.createEvent("KeyEvents");
-			if (WebPad.CurrEdit.tagName.toUpperCase()=="IFRAME")
-			{
-				evt.initKeyEvent('keypress', false, true, WebPad.CurrEdit.contentWindow, false, false, false, false, 0, ck);
-				WebPad.CurrEdit.contentWindow.document.dispatchEvent(evt);
-			}
-			else
-			{
-				evt.initKeyEvent('keypress', false, true, WebPad.CurrEdit.contentWindow, false, false, false, false, 0, ck);
-				WebPad.CurrEdit.dispatchEvent(evt);
-			}
-
-			
-			e.preventDefault();
-
-		} catch (ex) {
-			/*
-			*  Safari implements
-			*/
-			try {
-				evt = win.document.createEvent("TextEvent");
-				
-				if (WebPad.CurrEdit.tagName.toUpperCase()=="IFRAME")
-				{
-					evt.initTextEvent( 'textInput', true, true, WebPad.CurrEdit.contentWindow, String.fromCharCode(ck) );
-					WebPad.CurrEdit.contentWindow.document.dispatchEvent(evt);
-				}
-				else
-				{
-					evt.initTextEvent( 'textInput', true, true, null, String.fromCharCode(ck) );
-					WebPad.CurrEdit.dispatchEvent(evt);
-				}
-				
-				e.preventDefault();
-			} catch (ex) {
-				virtualprint = true;
-			}
-		}
-	} 
-	else if (WebPad.CurrEdit.createTextRange && WebPad.CurrEdit.caretPos) 
-	{
-		var caretPos = WebPad.CurrEdit.caretPos;      
-			caretPos.text = caretPos.text.charAt(caretPos.text.length - 1) == ' ' ?
-			strText + ' ' : strText;
-		WebPad.CurrEdit.focus(caretPos);
-	}	
-	else {
-		
-		DocumentSelection.insertAtCursor(WebPad.CurrEdit, strText);
-		WebPad.storeCaret();
-		WebPad.CurrEdit.focus();
-	}
-
+    DocumentSelection.insertAtCursor(WebPad.CurrEdit, strText);
+    WebPad.CurrEdit.focus();
 }
 
 function addStyle(strStyle)
@@ -340,9 +280,9 @@ WebPad.VK_Layout = [
     [String.fromCharCode(0x064E), String.fromCharCode(0x0650), String.fromCharCode(0x064F), String.fromCharCode(0x064D), String.fromCharCode(0x064B), String.fromCharCode(0x0628), String.fromCharCode(0x0621), String.fromCharCode(0x0670), String.fromCharCode(0x0651)],
 ];
 
-var cssdef = ".btnFlat{background:#ECECEC; border:1px solid #888; cursor:pointer; cursor:hand; text-align:center; font-family:Tahoma, Nafees Web Naskh}\
-.btnRaised, .btnFlat:hover{background:#D3D3D3; border:1px outset; cursor:pointer; cursor:hand; text-align:center; font-family:Tahoma, Nafees Web Naskh; font-weight:bold}\
-.btnLowered, .btnFlat:active{background:#D3D3D3; border:1px inset; cursor:pointer; cursor:hand; text-align:center; font-family:Tahoma, Nafees Web Naskh}\
+var cssdef = ".btnFlat{background:#ECECEC; border:1px solid #888; cursor:pointer; cursor:hand; text-align:center; font-family:Nafees Web Naskh, Tahoma}\
+.btnRaised, .btnFlat:hover{background:#D3D3D3; border:1px outset; cursor:pointer; cursor:hand; text-align:center; font-family:Nafees Web Naskh, Tahoma; font-weight:bold}\
+.btnLowered, .btnFlat:active{background:#D3D3D3; border:1px inset; cursor:pointer; cursor:hand; text-align:center; font-family:Nafees Web Naskh, Tahoma}\
 .keyboardHeader{background:#415888;color:#FFF;text-align:center;border:1px outset;border-color:#000;margin:0 0 5px;padding:2px;cursor:move}\
 .keyboardContainer{background:repeat scroll 0 0 #F7F7F7;direction:ltr; border:1px;border-style:solid;padding:5px;z-index:100}\
 .keyboardContainerDragged{background:repeat scroll 0 0 #F7F7F7;direction:ltr; medium dotted #000066;padding:5px;z-index:100;filter:alpha(opacity=40);-moz-opacity:.40;opacity:0.40}\
@@ -803,7 +743,7 @@ WebPad.setAttributes = function(el) {
     var saveBkcolor = el.style.backgroundColor;
     var saveFont = el.style.fontFamily;
     with (el.style) {
-        fontFamily = "Tahoma,Nafees Web Naskh";
+        fontFamily = "Nafees Web Naskh, Tahoma";
         backgroundColor = "#CCFFCC";
         direction = "rtl";
     }
