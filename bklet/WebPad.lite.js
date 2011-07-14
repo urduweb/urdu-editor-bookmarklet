@@ -505,7 +505,7 @@ WebPad.setAttributes = function(el) {
     var saveBkcolor = el.style.backgroundColor;
     var saveFont = el.style.fontFamily;
     with (el.style) {
-        fontFamily = "Tahoma,Nafees Web Naskh";
+        fontFamily = "Nafees Web Naskh, Tahoma";
         backgroundColor = "#CCFFCC";
         direction = "rtl";
     }
