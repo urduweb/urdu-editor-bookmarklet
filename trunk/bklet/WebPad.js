@@ -682,7 +682,7 @@ WebPad.setUrdu = function(el) {
         //return;
     }
     else    
-        el.style.backgroundColor = "#CCFFCC";
+        //el.style.backgroundColor = "#CCFFCC";
     if (el.createTextRange) {
         var caretPos = el.caretPos;
         el.focus(caretPos);
@@ -708,7 +708,7 @@ WebPad.setEnglish = function(el) {
         //return;
     }
     else
-        el.style.backgroundColor = "#DDEEFF";
+        //el.style.backgroundColor = "#DDEEFF";
     if (el.createTextRange) {
         var caretPos = el.caretPos;
         el.focus(caretPos);
@@ -744,7 +744,7 @@ WebPad.setAttributes = function(el) {
     var saveFont = el.style.fontFamily;
     with (el.style) {
         fontFamily = "Nafees Web Naskh, Tahoma";
-        backgroundColor = "#CCFFCC";
+        //backgroundColor = "#CCFFCC";
         direction = "rtl";
     }
 
@@ -787,7 +787,7 @@ WebPad.makeNormalEditor = function(el) {
         this.removeEvent(el.contentWindow, "focus", this.SetEditor);
     }
     else {
-        el.style.backgroundColor = this.Editors[editorID].OldBackground;
+        //el.style.backgroundColor = this.Editors[editorID].OldBackground;
         el.style.direction = "ltr";
         el.style.fontFamilty = this.Editors[editorID].OldFont;
         this.removeEvent(el, "keypress", this.ProcessKeypress);
