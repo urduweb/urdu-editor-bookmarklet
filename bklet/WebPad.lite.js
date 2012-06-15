@@ -229,7 +229,7 @@ WebPad.AddText = function(strText) {
 	{		
 		try {
 			evt = win.document.createEvent("KeyEvents");
-			if (WebPad.CurrEdit.tagName.toUpperCase()=="IFRAME")
+			/*if (WebPad.CurrEdit.tagName.toUpperCase()=="IFRAME")
 			{
 				evt.initKeyEvent('keypress', false, true, WebPad.CurrEdit.contentWindow, false, false, false, false, 0, ck);
 				WebPad.CurrEdit.contentWindow.document.dispatchEvent(evt);
@@ -241,7 +241,8 @@ WebPad.AddText = function(strText) {
 			}
 
 			
-			e.preventDefault();
+			e.preventDefault();*/
+			virtualprint = true;
 
 		} catch (ex) {
 			/*
@@ -330,7 +331,7 @@ WebPad.ProcessKeypress = function(e) {
 					return true;
 				try {
 					evt = win.document.createEvent("KeyEvents");
-					if (WebPad.CurrEdit.tagName.toUpperCase()=="IFRAME")
+					/*if (WebPad.CurrEdit.tagName.toUpperCase()=="IFRAME")
 					{
 						evt.initKeyEvent('keypress', false, true, WebPad.CurrEdit.contentWindow, false, false, false, false, 0, ck);
 						WebPad.CurrEdit.contentWindow.document.dispatchEvent(evt);
@@ -342,7 +343,8 @@ WebPad.ProcessKeypress = function(e) {
 					}
 
 					
-					e.preventDefault();
+					e.preventDefault();*/
+					virtualprint = true;
 
                 } catch (ex) {
                     /*
